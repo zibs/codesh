@@ -1,6 +1,12 @@
 # Codex Usage Menu Bar (Local-Only)
 
+<p align="center">
+  <img src="docs/assets/codesh.png" alt="codesh logo" width="420" />
+</p>
+
 Minimal macOS menu bar app that reads Codex session logs from disk and shows session/weekly usage percentages in the status bar.
+
+Inspired by [CodexMonitor](https://github.com/Dimillian/CodexMonitor). Built because the newly shipped Codex app from OpenAI doesn’t surface session/weekly usage at a glance.
 
 ## How it works
 - Reads JSONL session logs from `~/.codex/sessions/YYYY/MM/DD/*.jsonl`
