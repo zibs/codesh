@@ -3,10 +3,15 @@
 <p align="center">
   <img src="docs/assets/codesh.png" alt="codesh logo" width="420" />
 </p>
+<p align="center">
+  <img src="docs/assets/menu.png" alt="status bar preview" width="720" />
+</p>
 
 Minimal macOS menu bar app that reads Codex session logs from disk and shows session/weekly usage percentages in the status bar.
 
 Inspired by [CodexMonitor](https://github.com/Dimillian/CodexMonitor). Built because the newly shipped Codex app from OpenAI doesn’t surface session/weekly usage at a glance.
+
+“Codesh” is a short nod to **Codex Session** / **Codex Shell**—a tiny status‑bar companion for your local Codex usage.
 
 ## How it works
 - Reads JSONL session logs from `~/.codex/sessions/YYYY/MM/DD/*.jsonl`
@@ -20,6 +25,12 @@ Inspired by [CodexMonitor](https://github.com/Dimillian/CodexMonitor). Built bec
 3. In your target's **Info** tab, add:
    - `Application is agent (UIElement)` = `YES` (hides Dock icon)
 4. Build and run.
+
+## Installation (Users)
+1. Download `codesh.app.zip` from the latest GitHub Release.
+2. Unzip it to get `codesh.app`.
+3. Drag `codesh.app` into `/Applications`.
+4. Launch it from Applications.
 
 ## Notes
 - If you set `CODEX_HOME`, the app will read sessions from `$CODEX_HOME/sessions`.
