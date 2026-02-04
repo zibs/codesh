@@ -15,7 +15,6 @@ Inspired by [CodexMonitor](https://github.com/Dimillian/CodexMonitor). Built bec
 
 ## How it works
 - Reads JSONL session logs from `~/.codex/sessions/YYYY/MM/DD/*.jsonl`
-- Parses `payload.type == "token_count"` events
 - Uses `rate_limits.primary.used_percent` (session) and `rate_limits.secondary.used_percent` (weekly)
 - Falls back to cached values on startup for instant display
 

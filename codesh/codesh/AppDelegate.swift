@@ -24,10 +24,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let cached = settings.loadCachedRateLimits() {
             snapshot = UsageSnapshot(
                 updatedAt: cached.updatedAt,
-                last7DaysTokens: 0,
-                last30DaysTokens: 0,
-                todayTokens: 0,
-                latestSessionTokens: 0,
                 rateLimits: cached.snapshot
             )
         }

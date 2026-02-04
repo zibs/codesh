@@ -2,7 +2,6 @@ import Foundation
 
 final class UsageScanner {
     private let fileManager = FileManager.default
-    private let calendar = Calendar.current
 
     private static let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -16,67 +15,9 @@ final class UsageScanner {
         return formatter
     }()
 
-    func scan(days: Int) -> UsageSnapshot {
-        let now = Date()
-        let todayStart = calendar.startOfDay(for: now)
-        let dayKeys = makeDayKeys(days: days, todayStart: todayStart)
-
-        var dailyTotals: [String: Int] = [:]
-        dayKeys.forEach { dailyTotals[$0] = 0 }
-
-        var latestSessionTokens = 0
-        var latestSessionDate: Date?
-        var latestRateLimits: (timestamp: TimeInterval, snapshot: RateLimitSnapshot)?
-
-        let sessionsRoot = resolveSessionsRoot()
-
-        for offset in 0..<days {
-            guard let day = calendar.date(byAdding: .day, value: -offset, to: todayStart) else { continue }
-            let dayURL = dayDirectoryURL(for: day, sessionsRoot: sessionsRoot)
-
-            guard let files = jsonlFiles(in: dayURL) else { continue }
-
-            for fileURL in files {
-                let fileTokens = scanFile(
-                    fileURL,
-                    dailyTotals: &dailyTotals,
-                    latestRateLimits: &latestRateLimits
-                )
-
-                if let modDate = fileModificationDate(fileURL) {
-                    if latestSessionDate == nil || modDate > latestSessionDate! {
-                        latestSessionDate = modDate
-                        latestSessionTokens = fileTokens
-                    }
-                }
-            }
-        }
-
-        let last7DaysTokens = sumTokens(in: Array(dayKeys.prefix(7)), dailyTotals: dailyTotals)
-        let last30DaysTokens = sumTokens(in: dayKeys, dailyTotals: dailyTotals)
-        let todayTokens = dailyTotals[dayKeys.first ?? ""] ?? 0
-
-        let resolvedRateLimits = latestRateLimits?.snapshot ?? scanLatestRateLimits(sessionsRoot: sessionsRoot)?.snapshot
-
-        return UsageSnapshot(
-            updatedAt: now,
-            last7DaysTokens: last7DaysTokens,
-            last30DaysTokens: last30DaysTokens,
-            todayTokens: todayTokens,
-            latestSessionTokens: latestSessionTokens,
-            rateLimits: resolvedRateLimits
-        )
-    }
-
     func scanRateLimitsOnly() -> RateLimitSnapshot? {
         let sessionsRoot = resolveSessionsRoot()
         return scanLatestRateLimits(sessionsRoot: sessionsRoot)?.snapshot
-    }
-
-    private struct UsageTotals {
-        var input: Int
-        var cached: Int
-        var output: Int
     }
 
     private func resolveSessionsRoot() -> URL {
@@ -88,112 +29,6 @@ final class UsageScanner {
             codexHome = fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".codex")
         }
         return codexHome.appendingPathComponent("sessions")
-    }
-
-    private func makeDayKeys(days: Int, todayStart: Date) -> [String] {
-        var keys: [String] = []
-        keys.reserveCapacity(days)
-        for offset in 0..<days {
-            guard let day = calendar.date(byAdding: .day, value: -offset, to: todayStart) else { continue }
-            keys.append(dayKey(for: day))
-        }
-        return keys
-    }
-
-    private func dayKey(for date: Date) -> String {
-        let components = calendar.dateComponents([.year, .month, .day], from: date)
-        let year = String(format: "%04d", components.year ?? 0)
-        let month = String(format: "%02d", components.month ?? 0)
-        let day = String(format: "%02d", components.day ?? 0)
-        return "\(year)-\(month)-\(day)"
-    }
-
-    private func dayDirectoryURL(for date: Date, sessionsRoot: URL) -> URL {
-        let components = calendar.dateComponents([.year, .month, .day], from: date)
-        let year = String(format: "%04d", components.year ?? 0)
-        let month = String(format: "%02d", components.month ?? 0)
-        let day = String(format: "%02d", components.day ?? 0)
-        return sessionsRoot
-            .appendingPathComponent(year)
-            .appendingPathComponent(month)
-            .appendingPathComponent(day)
-    }
-
-    private func jsonlFiles(in folderURL: URL) -> [URL]? {
-        let fileURLs = (try? fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)) ?? []
-        let jsonlFiles = fileURLs.filter { $0.pathExtension == "jsonl" }
-        return jsonlFiles.isEmpty ? nil : jsonlFiles
-    }
-
-    private func scanFile(
-        _ url: URL,
-        dailyTotals: inout [String: Int],
-        latestRateLimits: inout (timestamp: TimeInterval, snapshot: RateLimitSnapshot)?
-    ) -> Int {
-        guard let content = try? String(contentsOf: url) else { return 0 }
-
-        var fileTokens = 0
-        var previousTotals: UsageTotals?
-
-        for line in content.split(separator: "\n") {
-            guard let data = String(line).data(using: .utf8) else { continue }
-            guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
-            guard let payload = object["payload"] as? [String: Any] else { continue }
-
-            let timestampMs = readTimestampMs(object["timestamp"]) ?? readTimestampMs(payload["timestamp"])
-
-            let rateLimitsMap = (payload["rate_limits"] as? [String: Any]) ?? (payload["rateLimits"] as? [String: Any]) ?? (object["rate_limits"] as? [String: Any]) ?? (object["rateLimits"] as? [String: Any])
-
-            if let rateLimits = rateLimitsMap,
-               let snapshot = parseRateLimits(rateLimits),
-               let timestampMs {
-                if latestRateLimits == nil || timestampMs > latestRateLimits!.timestamp {
-                    latestRateLimits = (timestampMs, snapshot)
-                }
-            } else if let rateLimits = rateLimitsMap,
-                      let snapshot = parseRateLimits(rateLimits),
-                      latestRateLimits == nil {
-                latestRateLimits = (0, snapshot)
-            }
-
-            guard let payloadType = payload["type"] as? String, payloadType == "token_count" else { continue }
-            guard let info = payload["info"] as? [String: Any] else { continue }
-            guard let usage = extractUsage(info: info) else { continue }
-
-            let (input, cached, output, isTotal) = usage
-            var delta = UsageTotals(input: input, cached: cached, output: output)
-
-            if isTotal {
-                let prev = previousTotals ?? UsageTotals(input: 0, cached: 0, output: 0)
-                delta = UsageTotals(
-                    input: max(input - prev.input, 0),
-                    cached: max(cached - prev.cached, 0),
-                    output: max(output - prev.output, 0)
-                )
-                previousTotals = UsageTotals(input: input, cached: cached, output: output)
-            } else {
-                var next = previousTotals ?? UsageTotals(input: 0, cached: 0, output: 0)
-                next.input += delta.input
-                next.cached += delta.cached
-                next.output += delta.output
-                previousTotals = next
-            }
-
-            if delta.input == 0 && delta.cached == 0 && delta.output == 0 {
-                continue
-            }
-
-            let tokenDelta = max(0, delta.input) + max(0, delta.output)
-            fileTokens += tokenDelta
-
-            if let timestampMs,
-               let dayKey = dayKey(forTimestampMs: timestampMs),
-               dailyTotals[dayKey] != nil {
-                dailyTotals[dayKey, default: 0] += tokenDelta
-            }
-        }
-
-        return fileTokens
     }
 
     private func scanLatestRateLimits(sessionsRoot: URL) -> (timestamp: TimeInterval, snapshot: RateLimitSnapshot)? {
@@ -225,7 +60,7 @@ final class UsageScanner {
         _ url: URL,
         fallbackDate: Date?
     ) -> (timestamp: TimeInterval, snapshot: RateLimitSnapshot)? {
-        guard let content = try? String(contentsOf: url) else { return nil }
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return nil }
 
         var latest: (timestamp: TimeInterval, snapshot: RateLimitSnapshot)?
 
@@ -235,7 +70,10 @@ final class UsageScanner {
             guard let payload = object["payload"] as? [String: Any] else { continue }
 
             let timestampMs = readTimestampMs(object["timestamp"]) ?? readTimestampMs(payload["timestamp"])
-            let rateLimitsMap = (payload["rate_limits"] as? [String: Any]) ?? (payload["rateLimits"] as? [String: Any]) ?? (object["rate_limits"] as? [String: Any]) ?? (object["rateLimits"] as? [String: Any])
+            let rateLimitsMap = (payload["rate_limits"] as? [String: Any])
+                ?? (payload["rateLimits"] as? [String: Any])
+                ?? (object["rate_limits"] as? [String: Any])
+                ?? (object["rateLimits"] as? [String: Any])
 
             guard let rateLimits = rateLimitsMap,
                   let snapshot = parseRateLimits(rateLimits) else { continue }
@@ -250,47 +88,6 @@ final class UsageScanner {
         }
 
         return latest
-    }
-
-    private func extractUsage(info: [String: Any]) -> (Int, Int, Int, Bool)? {
-        if let total = usageMap(info: info, keys: ["total_token_usage", "totalTokenUsage"]) {
-            return (
-                intValue(total, keys: ["input_tokens", "inputTokens"]),
-                intValue(total, keys: ["cached_input_tokens", "cache_read_input_tokens", "cachedInputTokens", "cacheReadInputTokens"]),
-                intValue(total, keys: ["output_tokens", "outputTokens"]),
-                true
-            )
-        }
-        if let last = usageMap(info: info, keys: ["last_token_usage", "lastTokenUsage"]) {
-            return (
-                intValue(last, keys: ["input_tokens", "inputTokens"]),
-                intValue(last, keys: ["cached_input_tokens", "cache_read_input_tokens", "cachedInputTokens", "cacheReadInputTokens"]),
-                intValue(last, keys: ["output_tokens", "outputTokens"]),
-                false
-            )
-        }
-        return nil
-    }
-
-    private func usageMap(info: [String: Any], keys: [String]) -> [String: Any]? {
-        for key in keys {
-            if let map = info[key] as? [String: Any] {
-                return map
-            }
-        }
-        return nil
-    }
-
-    private func intValue(_ map: [String: Any], keys: [String]) -> Int {
-        for key in keys {
-            if let number = map[key] as? NSNumber {
-                return number.intValue
-            }
-            if let string = map[key] as? String, let intValue = Int(string) {
-                return intValue
-            }
-        }
-        return 0
     }
 
     private func doubleValue(_ map: [String: Any], keys: [String]) -> Double? {
@@ -320,12 +117,6 @@ final class UsageScanner {
             return numeric > 0 ? numeric : nil
         }
         return nil
-    }
-
-    private func dayKey(forTimestampMs timestampMs: TimeInterval) -> String? {
-        guard timestampMs > 0 else { return nil }
-        let date = Date(timeIntervalSince1970: timestampMs / 1000.0)
-        return dayKey(for: date)
     }
 
     private func parseRateLimits(_ rateLimits: [String: Any]) -> RateLimitSnapshot? {
@@ -372,14 +163,5 @@ final class UsageScanner {
             }
         }
         return nil
-    }
-
-    private func sumTokens(in keys: [String], dailyTotals: [String: Int]) -> Int {
-        keys.reduce(0) { $0 + (dailyTotals[$1] ?? 0) }
-    }
-
-    private func fileModificationDate(_ url: URL) -> Date? {
-        guard let attributes = try? fileManager.attributesOfItem(atPath: url.path) else { return nil }
-        return attributes[.modificationDate] as? Date
     }
 }

@@ -2,18 +2,10 @@ import Foundation
 
 struct UsageSnapshot {
     let updatedAt: Date
-    let last7DaysTokens: Int
-    let last30DaysTokens: Int
-    let todayTokens: Int
-    let latestSessionTokens: Int
     let rateLimits: RateLimitSnapshot?
 
     static let empty = UsageSnapshot(
         updatedAt: Date(timeIntervalSince1970: 0),
-        last7DaysTokens: 0,
-        last30DaysTokens: 0,
-        todayTokens: 0,
-        latestSessionTokens: 0,
         rateLimits: nil
     )
 }
