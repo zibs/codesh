@@ -14,19 +14,11 @@
 			remoteGlobalIDString = 453F072F2F33A0FE00798BF6;
 			remoteInfo = codesh;
 		};
-		453F07482F33A10000798BF6 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 453F07282F33A0FE00798BF6 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 453F072F2F33A0FE00798BF6;
-			remoteInfo = codesh;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		453F07302F33A0FE00798BF6 /* codesh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = codesh.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		453F073D2F33A10000798BF6 /* codeshTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = codeshTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		453F07472F33A10000798BF6 /* codeshUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = codeshUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -38,11 +30,6 @@
 		453F07402F33A10000798BF6 /* codeshTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = codeshTests;
-			sourceTree = "<group>";
-		};
-		453F074A2F33A10000798BF6 /* codeshUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = codeshUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -62,13 +49,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		453F07442F33A10000798BF6 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -77,7 +57,6 @@
 			children = (
 				453F07322F33A0FE00798BF6 /* codesh */,
 				453F07402F33A10000798BF6 /* codeshTests */,
-				453F074A2F33A10000798BF6 /* codeshUITests */,
 				453F07312F33A0FE00798BF6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,7 +66,6 @@
 			children = (
 				453F07302F33A0FE00798BF6 /* codesh.app */,
 				453F073D2F33A10000798BF6 /* codeshTests.xctest */,
-				453F07472F33A10000798BF6 /* codeshUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -140,29 +118,6 @@
 			productReference = 453F073D2F33A10000798BF6 /* codeshTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		453F07462F33A10000798BF6 /* codeshUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 453F07572F33A10000798BF6 /* Build configuration list for PBXNativeTarget "codeshUITests" */;
-			buildPhases = (
-				453F07432F33A10000798BF6 /* Sources */,
-				453F07442F33A10000798BF6 /* Frameworks */,
-				453F07452F33A10000798BF6 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				453F07492F33A10000798BF6 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				453F074A2F33A10000798BF6 /* codeshUITests */,
-			);
-			name = codeshUITests;
-			packageProductDependencies = (
-			);
-			productName = codeshUITests;
-			productReference = 453F07472F33A10000798BF6 /* codeshUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -177,10 +132,6 @@
 						CreatedOnToolsVersion = 26.2;
 					};
 					453F073C2F33A10000798BF6 = {
-						CreatedOnToolsVersion = 26.2;
-						TestTargetID = 453F072F2F33A0FE00798BF6;
-					};
-					453F07462F33A10000798BF6 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 453F072F2F33A0FE00798BF6;
 					};
@@ -202,7 +153,6 @@
 			targets = (
 				453F072F2F33A0FE00798BF6 /* codesh */,
 				453F073C2F33A10000798BF6 /* codeshTests */,
-				453F07462F33A10000798BF6 /* codeshUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -216,13 +166,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		453F073B2F33A10000798BF6 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		453F07452F33A10000798BF6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -246,13 +189,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		453F07432F33A10000798BF6 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -260,11 +196,6 @@
 			isa = PBXTargetDependency;
 			target = 453F072F2F33A0FE00798BF6 /* codesh */;
 			targetProxy = 453F073E2F33A10000798BF6 /* PBXContainerItemProxy */;
-		};
-		453F07492F33A10000798BF6 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 453F072F2F33A0FE00798BF6 /* codesh */;
-			targetProxy = 453F07482F33A10000798BF6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -497,44 +428,6 @@
 			};
 			name = Release;
 		};
-		453F07582F33A10000798BF6 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DD5Z964W6X;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zibs.codeshUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = codesh;
-			};
-			name = Debug;
-		};
-		453F07592F33A10000798BF6 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DD5Z964W6X;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zibs.codeshUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = codesh;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -561,15 +454,6 @@
 			buildConfigurations = (
 				453F07552F33A10000798BF6 /* Debug */,
 				453F07562F33A10000798BF6 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		453F07572F33A10000798BF6 /* Build configuration list for PBXNativeTarget "codeshUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				453F07582F33A10000798BF6 /* Debug */,
-				453F07592F33A10000798BF6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

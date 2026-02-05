@@ -1,7 +1,13 @@
 import Foundation
 
 final class UsageScanner {
-    private let fileManager = FileManager.default
+    private let fileManager: FileManager
+    private let sessionsRootOverride: URL?
+
+    init(fileManager: FileManager = .default, sessionsRootOverride: URL? = nil) {
+        self.fileManager = fileManager
+        self.sessionsRootOverride = sessionsRootOverride
+    }
 
     private static let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -16,7 +22,7 @@ final class UsageScanner {
     }()
 
     func scanRateLimitsOnly() -> RateLimitSnapshot? {
-        let sessionsRoot = resolveSessionsRoot()
+        let sessionsRoot = sessionsRootOverride ?? resolveSessionsRoot()
         return scanLatestRateLimits(sessionsRoot: sessionsRoot)?.snapshot
     }
 

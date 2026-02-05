@@ -3,12 +3,16 @@ import Foundation
 final class SettingsStore {
     static let shared = SettingsStore()
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private let sessionPercentKey = "cachedSessionPercent"
     private let weeklyPercentKey = "cachedWeeklyPercent"
     private let sessionResetKey = "cachedSessionResetAt"
     private let weeklyResetKey = "cachedWeeklyResetAt"
     private let rateLimitsUpdatedAtKey = "cachedRateLimitsUpdatedAt"
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     struct CachedRateLimits {
         let snapshot: RateLimitSnapshot
