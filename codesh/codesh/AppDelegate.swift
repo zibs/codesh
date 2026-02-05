@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = SettingsStore.shared
@@ -7,11 +8,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
+    private let popover = NSPopover()
 
     private let updatedItem = NSMenuItem(title: "Last updated: --", action: nil, keyEquivalent: "")
     private let sessionPercentItem = NSMenuItem(title: "Session: --", action: nil, keyEquivalent: "")
     private let weeklyPercentItem = NSMenuItem(title: "Weekly: --", action: nil, keyEquivalent: "")
 
+    private let colorSettingsItem = NSMenuItem(
+        title: "Customize Colors…",
+        action: #selector(toggleColorPopover),
+        keyEquivalent: ","
+    )
     private let refreshItem = NSMenuItem(title: "Refresh", action: #selector(refreshNow), keyEquivalent: "r")
     private let quitItem = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
 
@@ -21,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         setStatusTitle(sessionText: "--", weeklyText: "--")
 
+        configurePopover()
         if let cached = settings.loadCachedRateLimits() {
             snapshot = UsageSnapshot(
                 updatedAt: cached.updatedAt,
@@ -51,6 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         sessionPercentItem.isEnabled = false
         weeklyPercentItem.isEnabled = false
 
+        colorSettingsItem.target = self
+        colorSettingsItem.keyEquivalentModifierMask = [.command]
         refreshItem.target = self
         quitItem.target = self
 
@@ -60,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(sessionPercentItem)
         menu.addItem(weeklyPercentItem)
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(colorSettingsItem)
         menu.addItem(refreshItem)
         menu.addItem(quitItem)
 
@@ -111,20 +122,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func sessionAccentColor() -> NSColor {
-        NSColor(name: nil) { appearance in
+        NSColor(name: nil) { [settings] appearance in
             if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-                return NSColor(calibratedRed: 0.25, green: 1.0, blue: 0.55, alpha: 1.0)
+                return settings.resolvedColor(for: .sessionDark)
             }
-            return NSColor(calibratedRed: 0.0, green: 0.62, blue: 0.28, alpha: 1.0)
+            return settings.resolvedColor(for: .sessionLight)
         }
     }
 
     private func weeklyAccentColor() -> NSColor {
-        NSColor(name: nil) { appearance in
+        NSColor(name: nil) { [settings] appearance in
             if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-                return NSColor(calibratedRed: 0.35, green: 0.78, blue: 1.0, alpha: 1.0)
+                return settings.resolvedColor(for: .weeklyDark)
             }
-            return NSColor(calibratedRed: 0.05, green: 0.5, blue: 0.9, alpha: 1.0)
+            return settings.resolvedColor(for: .weeklyLight)
         }
     }
 
@@ -138,7 +149,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         usageController.refresh()
     }
 
+    @objc private func toggleColorPopover() {
+        guard let button = statusItem.button else { return }
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
+    }
+
     @objc private func quitApp() {
         NSApp.terminate(nil)
+    }
+
+    private func configurePopover() {
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentSize = NSSize(width: 320, height: 280)
+        popover.contentViewController = NSHostingController(
+            rootView: ColorPreferencesView { [weak self] in
+                self?.updateUI()
+            }
+        )
     }
 }
