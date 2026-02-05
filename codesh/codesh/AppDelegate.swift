@@ -105,7 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private func setStatusTitle(sessionText: String, weeklyText: String) {
         guard let button = statusItem.button else { return }
-        let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .bold)
+        let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
         let baseAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .kern: -0.2
