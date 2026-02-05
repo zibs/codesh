@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let settings = SettingsStore.shared
     private let usageController = UsageController()
     private var snapshot = UsageSnapshot.empty
@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
     private let popover = NSPopover()
+    private var popoverGlobalMonitor: Any?
+    private var popoverLocalMonitor: Any?
 
     private let updatedItem = NSMenuItem(title: "Last updated: --", action: nil, keyEquivalent: "")
     private let sessionPercentItem = NSMenuItem(title: "Session: --", action: nil, keyEquivalent: "")
@@ -159,6 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.popover.contentViewController?.view.window?.makeKey()
             }
+            startPopoverMonitoring()
         }
     }
 
@@ -170,10 +173,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.behavior = .semitransient
         popover.animates = true
         popover.contentSize = NSSize(width: 320, height: 280)
+        popover.delegate = self
         popover.contentViewController = NSHostingController(
             rootView: ColorPreferencesView { [weak self] in
                 self?.updateUI()
             }
         )
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        stopPopoverMonitoring()
+    }
+
+    private func startPopoverMonitoring() {
+        guard popoverGlobalMonitor == nil, popoverLocalMonitor == nil else { return }
+
+        popoverGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.dismissPopoverIfNeeded()
+        }
+
+        popoverLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
+            guard let self else { return event }
+            if event.type == .keyDown, event.keyCode == 53 { // Escape
+                self.popover.performClose(nil)
+                return nil
+            }
+            self.dismissPopoverIfNeeded()
+            return event
+        }
+    }
+
+    private func stopPopoverMonitoring() {
+        if let monitor = popoverGlobalMonitor {
+            NSEvent.removeMonitor(monitor)
+            popoverGlobalMonitor = nil
+        }
+        if let monitor = popoverLocalMonitor {
+            NSEvent.removeMonitor(monitor)
+            popoverLocalMonitor = nil
+        }
+    }
+
+    private func dismissPopoverIfNeeded() {
+        guard popover.isShown,
+              let popoverWindow = popover.contentViewController?.view.window else {
+            return
+        }
+
+        let location = NSEvent.mouseLocation
+        let isInPopover = popoverWindow.frame.contains(location)
+        let colorPanel = NSColorPanel.shared
+        let isInColorPanel = colorPanel.isVisible && colorPanel.frame.contains(location)
+
+        if !isInPopover && !isInColorPanel {
+            popover.performClose(nil)
+        }
     }
 }
