@@ -154,7 +154,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            DispatchQueue.main.async { [weak self] in
+                self?.popover.contentViewController?.view.window?.makeKey()
+            }
         }
     }
 
@@ -163,7 +167,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configurePopover() {
-        popover.behavior = .transient
+        popover.behavior = .semitransient
         popover.animates = true
         popover.contentSize = NSSize(width: 320, height: 280)
         popover.contentViewController = NSHostingController(
